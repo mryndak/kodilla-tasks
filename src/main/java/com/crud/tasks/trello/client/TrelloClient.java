@@ -8,10 +8,8 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -25,9 +23,11 @@ public class TrelloClient {
     private String trelloAppKey;
     @Value("${trello.app.token}")
     private String trelloToken;
+    @Value("${trello.app.user}")
+    private String trelloUser;
 
     public List<TrelloBoardDto> getTrelloBoards() {
-        URI url = UriComponentsBuilder.fromHttpUrl(trelloApiEndpoint + "/members/kodillaautor/boards")
+        URI url = UriComponentsBuilder.fromHttpUrl(trelloApiEndpoint + "/members/" + trelloUser + "/boards")
                 .queryParam("key", trelloAppKey)
                 .queryParam("token", trelloToken)
                 .queryParam("fields", "name,id")
@@ -39,6 +39,10 @@ public class TrelloClient {
 
         return Optional.ofNullable(boardsResponse)
                 .map(Arrays::asList)
-                .orElse(Collections.emptyList());
+                .orElse(Collections.emptyList())
+                .stream()
+                .filter(p -> Objects.nonNull(p.getId()) && Objects.nonNull(p.getName()))
+                .filter(p -> p.getName().contains("Kodilla"))
+                .collect(Collectors.toList());
     }
 }
